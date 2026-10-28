@@ -2,12 +2,14 @@ import { lazy, Suspense, useDeferredValue, useState } from "react";
 import { Link, useParams } from "react-router";
 import { ArrowRight, Check, Code2, Eye, PencilLine } from "lucide-react";
 import { ConfirmDialog } from "~/components/ConfirmDialog";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "~/components/ui/dialog";
+import { Dialog } from "~/components/ui/dialog";
+import { ModalContent } from "~/components/ui/modal";
 import { usePostEditor } from "./hooks/usePostEditor";
 import PostPreview from "./components/PostPreview";
 
 const ContentBuilder = lazy(() => import("./components/ContentBuilder"));
 const PostJson = lazy(() => import("./components/PostJson"));
+const PostJsonActions = lazy(() => import("./components/PostJson").then((module) => ({ default: module.PostJsonActions })));
 export default function PostEditorPage() {
   const { id } = useParams();
   const editor = usePostEditor(id);
@@ -27,7 +29,10 @@ export default function PostEditorPage() {
       </div>
     </header>
     {mode === "edit" ? <Suspense fallback={<p className="p-12 text-center text-xs text-stone-400">در حال آماده‌سازی محیط نوشتن…</p>}><ContentBuilder metadata={editor.metadata} onMetadataChange={editor.updateMetadata} blocks={editor.blocks} onChange={editor.setBlocks} /></Suspense> : <div className="mx-auto max-w-[800px] px-3 py-12"><PostPreview post={preview ?? editor.post} /></div>}
-    <Dialog open={jsonOpen} onOpenChange={setJsonOpen}><DialogContent dir="rtl" className="max-h-[90vh] overflow-auto sm:max-w-3xl"><DialogTitle>خروجی مطلب</DialogTitle><DialogDescription>داده‌ی ساختاریافته با ترتیب بلوک‌ها، آماده‌ی ارسال به بک‌اند.</DialogDescription><Suspense fallback={<p>در حال آماده‌سازی…</p>}><PostJson post={editor.post} /></Suspense></DialogContent></Dialog>
+    <Dialog open={jsonOpen} onOpenChange={setJsonOpen}><ModalContent title="خروجی مطلب" description="داده‌ی ساختاریافته با ترتیب بلوک‌ها، آماده‌ی ارسال به بک‌اند." className="sm:max-w-3xl"
+      footer={<Suspense fallback={<span className="text-xs text-stone-400">در حال آماده‌سازی…</span>}><PostJsonActions post={editor.post} /></Suspense>}>
+      <Suspense fallback={<p>در حال آماده‌سازی…</p>}><PostJson post={editor.post} /></Suspense>
+    </ModalContent></Dialog>
     <ConfirmDialog open={editor.blocker.state === "blocked"} title="تغییرات ذخیره نشده‌اند" description="با خروج از این صفحه تغییرات از دست می‌روند." confirmLabel="خروج بدون ذخیره" onCancel={() => editor.blocker.reset?.()} onConfirm={() => editor.blocker.proceed?.()} />
   </div>;
 }

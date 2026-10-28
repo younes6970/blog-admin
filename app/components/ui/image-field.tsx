@@ -2,10 +2,10 @@ import { useRef, useState } from "react";
 import { ImagePlus } from "lucide-react";
 import { Input } from "./input";
 import { EditorField } from "./editor-field";
+import { IMAGE_POSITIONS, IMAGE_POSITION_LABELS, type ImageValue } from "~/types/image";
 
-type ImageValue = { src: string; alt: string };
 const MAX_BYTES = 1024 * 1024;
-export function ImageField({ value, onChange }: { value: ImageValue; onChange: (value: ImageValue) => void }) {
+export function ImageField({ value, onChange, allowPosition = false }: { value: ImageValue; onChange: (value: ImageValue) => void; allowPosition?: boolean }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const generation = useRef(0);
@@ -36,5 +36,11 @@ export function ImageField({ value, onChange }: { value: ImageValue; onChange: (
     {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
     {value.src && <button type="button" className="text-xs text-red-600" onClick={() => { generation.current++; onChange({ ...value, src: "" }); }}>حذف تصویر</button>}
     <EditorField label="متن جایگزین تصویر">{(id) => <Input id={id} value={value.alt} onChange={(event) => onChange({ ...value, alt: event.target.value })} placeholder="توضیح کوتاه تصویر برای دسترس‌پذیری" />}</EditorField>
+    {allowPosition && <fieldset className="space-y-2">
+      <legend className="text-sm font-medium text-stone-700">موقعیت تصویر داخل کادر</legend>
+      <div dir="ltr" className="grid grid-cols-3 gap-1.5">{IMAGE_POSITIONS.map((position) => <button key={position} type="button" aria-pressed={(value.position ?? "center") === position} onClick={() => onChange({ ...value, position })}
+        className={`rounded-lg border px-2 py-2 text-xs transition-colors ${(value.position ?? "center") === position ? "border-stone-900 bg-stone-900 text-white" : "border-stone-200 text-stone-500 hover:bg-stone-50"}`}>{IMAGE_POSITION_LABELS[position]}</button>)}</div>
+      <p className="text-xs leading-6 text-stone-400">بخش مهم تصویر را در کادر نگه دارید؛ فایل اصلی تغییر نمی‌کند.</p>
+    </fieldset>}
   </div>;
 }

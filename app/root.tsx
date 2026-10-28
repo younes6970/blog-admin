@@ -49,7 +49,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="bg-gray-50 flex flex-col">
+      <body className="bg-white flex flex-col">
         {children}
         <ScrollRestoration />
         <Scripts />

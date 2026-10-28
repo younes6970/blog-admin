@@ -9,7 +9,7 @@
 @theme {
   --spacing: 4px;
 
-  --color-main: #253d7f;
+  --color-main: #1c1917;
   --color-white: #ffffff;
   --color-success: #36bba5;
   --color-gray: #696a6d;
@@ -56,7 +56,7 @@
 :root {
   --radius: 0.25rem;
 
-  --color-main: #253d7f;
+  --color-main: #1c1917;
   --color-success: #36bba5;
   --color-gray: #696a6d;
   --color-gray-light: #b1b3b6;

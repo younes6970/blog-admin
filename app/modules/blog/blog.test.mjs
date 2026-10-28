@@ -102,3 +102,16 @@ test("old posts remain compatible and new marker and banner options survive JSON
     }
   }
 });
+
+test("all link variants and sizes survive serialization; older links remain valid", () => {
+  const post = createPost();
+  const oldLink = { id: "legacy-link", type: "link", text: "Read", href: "https://example.com" };
+  assert.ok(postSchema.safeParse({ ...post, blocks: [oldLink] }).success);
+  for (const variant of ["default", "outline", "ghost"]) {
+    for (const size of ["sm", "default", "lg"]) {
+      const updated = { ...post, blocks: [{ ...oldLink, variant, size }] };
+      assert.deepEqual(postSchema.parse(JSON.parse(serializePost(updated))), updated);
+    }
+  }
+  assert.equal(postSchema.safeParse({ ...post, blocks: [{ ...oldLink, variant: "invalid" }] }).success, false);
+});

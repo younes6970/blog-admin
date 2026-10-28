@@ -2,12 +2,8 @@ import { Button } from "./ui/button";
 import {
   Dialog,
   DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from "./ui/dialog";
+import { ModalContent } from "./ui/modal";
 type Props = {
   open: boolean;
   loading?: boolean;
@@ -32,14 +28,7 @@ export default function Confirm({
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent >
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
-        <DialogDescription className="text-sm leading-6">
-          {description}
-        </DialogDescription>
-        <DialogFooter>
+      <ModalContent title={title} footer={<>
           <DialogClose asChild>
             <Button
               type="button"
@@ -59,8 +48,9 @@ export default function Confirm({
           >
             {confirmText}
           </Button>
-        </DialogFooter>
-      </DialogContent>
+        </>}>
+        <p className="text-sm leading-7 text-stone-600">{description}</p>
+      </ModalContent>
     </Dialog>
   );
 }

@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router";
 import ts from "typescript";
 
 const appRoot = new URL("../../", import.meta.url);
@@ -38,6 +39,7 @@ const { createPost, createBlock } = await import("./types.ts");
 const { default: InlineBlock } = await import("./components/InlineBlock.tsx");
 const { default: ContentBuilder } = await import("./components/ContentBuilder.tsx");
 const { default: PostPreview } = await import("./components/PostPreview.tsx");
+const { default: PostCard } = await import("./components/PostCard.tsx");
 const noop = () => {};
 
 test("inline editing renders every block type without Slot errors", () => {
@@ -105,4 +107,27 @@ test("preview renders geometric list markers and a linked slim banner", () => {
   assert.match(html, /aspect-\[5\/1\]/);
   assert.match(html, /href="https:\/\/example.com\/destination"/);
   assert.match(html, /rel="noopener noreferrer"/);
+});
+
+test("post cards preserve cover position, metadata and accessible management actions", () => {
+  const post = { ...createPost(), title: "Card title", excerpt: "Card summary", author: "Writer", tags: ["News"], cover: { src: "https://example.com/cover.jpg", alt: "Cover", position: "top" } };
+  const html = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(PostCard, { post, onDelete: noop })));
+  assert.match(html, /<article/);
+  assert.ok(!html.includes("<table"));
+  assert.match(html, /object-position:top/);
+  assert.match(html, /loading="lazy"/);
+  assert.match(html, /Card title/);
+  assert.match(html, /Card summary/);
+  assert.match(html, /Writer/);
+  assert.match(html, /News/);
+  assert.match(html, /aria-label="دانلود JSON Card title"/);
+  assert.match(html, /aria-label="حذف Card title"/);
+  assert.ok(html.includes(`/posts/${post.id}/edit`));
+});
+
+test("post cards without an image render a stable placeholder", () => {
+  const post = createPost();
+  const html = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(PostCard, { post, onDelete: noop })));
+  assert.ok(!html.includes("<img"));
+  assert.match(html, /aspect-\[2\.2\/1\]/);
 });

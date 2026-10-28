@@ -3,6 +3,7 @@ import { ImageIcon } from "lucide-react";
 import type { BlogPost, ContentBlock } from "../types";
 import { safeHref, safeImage } from "../schema";
 import { formatPostDate } from "../utils";
+import { linkAppearanceClass, COVER_IMAGE_CLASS } from "../block-presentation";
 import { getListMarker, listMarkerStyle, bannerImageClass, bannerPlaceholderClass } from "../block-presentation";
 
 const BlockPreview = memo(function BlockPreview({ block }: { block: ContentBlock }) {
@@ -17,10 +18,10 @@ const BlockPreview = memo(function BlockPreview({ block }: { block: ContentBlock
       const Tag = marker === "decimal" ? "ol" : "ul";
       return <Tag style={{ listStyleType: listMarkerStyle(marker) }} className={`space-y-2 leading-8 text-slate-600 ${marker === "none" ? "pr-0" : "pr-6"}`}>{block.items.map((item, index) => <li key={index}>{item || "آیتم لیست"}</li>)}</Tag>;
     }
-    case "link": return <a className="inline-flex rounded-lg bg-main px-5 py-3 text-sm text-white" href={safeHref(block.href)} target="_blank" rel="noopener noreferrer">{block.text || "متن لینک"}</a>;
+    case "link": return <a className={linkAppearanceClass(block.variant, block.size)} href={safeHref(block.href)} target="_blank" rel="noopener noreferrer">{block.text || "متن لینک"}</a>;
     case "image": {
       const src = safeImage(block.image.src);
-      const image = src ? <img src={src} alt={block.image.alt} className={`rounded-lg ${bannerImageClass(block.size)}`} loading="lazy" decoding="async" /> : <div className={`rounded-lg bg-stone-100 ${bannerPlaceholderClass(block.size)}`} />;
+      const image = src ? <img src={src} alt={block.image.alt} style={{ objectPosition: block.image.position ?? "center" }} className={`rounded-lg ${bannerImageClass(block.size)}`} loading="lazy" decoding="async" /> : <div className={`rounded-lg bg-stone-100 ${bannerPlaceholderClass(block.size)}`} />;
       return <figure>{safeHref(block.href) ? <a href={safeHref(block.href)} target="_blank" rel="noopener noreferrer">{image}</a> : image}
         {block.caption && <figcaption className="mt-3 text-center text-xs text-slate-500">{block.caption}</figcaption>}</figure>;
     }
@@ -35,7 +36,7 @@ export default memo(function PostPreview({ post }: { post: BlogPost }) {
     <div className="mb-7 flex flex-wrap gap-2">{post.tags.map((tag) => <span key={tag} className="rounded-full bg-stone-100 px-3 py-1 text-[11px] text-stone-600">{tag}</span>)}</div>
     <h1 className="text-[30px] font-bold leading-[1.65] tracking-tight text-stone-900 sm:text-[40px]">{post.title || "عنوان داستان شما…"}</h1>
     <div className="mb-7 mt-4 flex flex-wrap gap-3 text-xs text-slate-500"><span>{formatPostDate(post.publishedAt)}</span><span>•</span><span>{post.author || "نام نویسنده"}</span></div>
-    {cover ? <img src={cover} alt={post.cover.alt} className="mb-7 max-h-[520px] w-full rounded-lg object-cover" decoding="async" /> : <ImagePlaceholder />}
+    {cover ? <img src={cover} alt={post.cover.alt} style={{ objectPosition: post.cover.position ?? "center" }} className={`mb-7 rounded-lg ${COVER_IMAGE_CLASS}`} decoding="async" /> : <ImagePlaceholder />}
     {post.excerpt && <p className="my-7 text-[16px] leading-8 text-stone-500">{post.excerpt}</p>}
     <div className="mt-8 space-y-7">{post.blocks.map((block) => <BlockPreview key={block.id} block={block} />)}</div>
     {!post.blocks.length && <p className="py-12 text-center text-sm text-slate-400">محتوای پست پس از افزودن بلوک‌ها اینجا نمایش داده می‌شود.</p>}

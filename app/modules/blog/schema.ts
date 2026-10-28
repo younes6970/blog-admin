@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { BANNER_SIZES, LIST_MARKERS } from "./types";
+import { IMAGE_POSITIONS } from "../../types/image";
+import { BANNER_SIZES, LIST_MARKERS, LINK_VARIANTS, LINK_SIZES } from "./types";
 
 export function safeHref(value: string): string | undefined {
   try {
@@ -11,7 +12,7 @@ export function safeImage(value: string): string | undefined {
   if (/^data:image\/(png|jpeg|webp|gif);base64,[a-z\d+/=\s]+$/i.test(value)) return value;
   return safeHref(value);
 }
-const image = z.object({ src: z.string(), alt: z.string() });
+const image = z.object({ src: z.string(), alt: z.string(), position: z.enum(IMAGE_POSITIONS).optional() });
 const base = { id: z.string().min(1) };
 export const postSchema = z.object({
   schemaVersion: z.literal(1), id: z.string().min(1), title: z.string(), excerpt: z.string(),
@@ -22,7 +23,7 @@ export const postSchema = z.object({
     z.object({ ...base, type: z.literal("paragraph"), text: z.string() }),
     z.object({ ...base, type: z.literal("list"), items: z.array(z.string()), ordered: z.boolean(), marker: z.enum(LIST_MARKERS).optional() }),
     z.object({ ...base, type: z.literal("image"), image, caption: z.string(), href: z.string(), size: z.enum(BANNER_SIZES).optional() }),
-    z.object({ ...base, type: z.literal("link"), text: z.string(), href: z.string() }),
+    z.object({ ...base, type: z.literal("link"), text: z.string(), href: z.string(), variant: z.enum(LINK_VARIANTS).optional(), size: z.enum(LINK_SIZES).optional() }),
   ])),
 }).refine((post) => new Set(post.blocks.map((block) => block.id)).size === post.blocks.length,
   "شناسه‌های بلوک باید یکتا باشند");

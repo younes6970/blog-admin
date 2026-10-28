@@ -4,6 +4,7 @@ import { EditorField } from "~/components/ui/editor-field";
 import { ImageField } from "~/components/ui/image-field";
 import { BANNER_SIZES, LIST_MARKERS, type BannerSize, type ListMarker, type ContentBlock } from "../types";
 import { BANNER_SIZE_LABELS, LIST_MARKER_LABELS, getListMarker } from "../block-presentation";
+import { LINK_VARIANTS, LINK_SIZES, type LinkVariant, type LinkSize } from "../types";
 
 export default function BlockFields({ block, onChange }: { block: ContentBlock; onChange: (block: ContentBlock) => void }) {
   switch (block.type) {
@@ -24,6 +25,10 @@ export default function BlockFields({ block, onChange }: { block: ContentBlock; 
       <EditorField label="لینک بنر (اختیاری)">{(id) => <Input id={id} dir="ltr" placeholder="https://…" value={block.href} onChange={(event) => onChange({ ...block, href: event.target.value })} />}</EditorField>
     </div>;
     case "link": return <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <EditorField label="ظاهر لینک">{(id) => <select id={id} className="w-full rounded-lg border p-2 text-sm" value={block.variant ?? "default"} onChange={(event) => onChange({ ...block, variant: event.target.value as LinkVariant })}>{LINK_VARIANTS.map((variant) => <option key={variant} value={variant}>{variant}</option>)}</select>}</EditorField>
+        <EditorField label="اندازه لینک">{(id) => <select id={id} className="w-full rounded-lg border p-2 text-sm" value={block.size ?? "default"} onChange={(event) => onChange({ ...block, size: event.target.value as LinkSize })}>{LINK_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}</select>}</EditorField>
+      </div>
       <EditorField label="متن لینک">{(id) => <Input id={id} value={block.text} onChange={(event) => onChange({ ...block, text: event.target.value })} />}</EditorField>
       <EditorField label="آدرس لینک">{(id) => <Input id={id} dir="ltr" placeholder="https://…" value={block.href} onChange={(event) => onChange({ ...block, href: event.target.value })} />}</EditorField>
     </div>;

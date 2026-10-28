@@ -1,7 +1,8 @@
 import { memo, useState } from "react";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { ArrowDown, ArrowUp, Copy, GripVertical, Settings2, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "~/components/ui/dialog";
+import { Dialog } from "~/components/ui/dialog";
+import { ModalContent } from "~/components/ui/modal";
 import { BLOCK_LABELS, type ContentBlock } from "../types";
 import BlockFields from "./BlockFields";
 import InlineBlock from "./InlineBlock";
@@ -28,11 +29,9 @@ export default memo(function SortableBlock({ block, index, count, selected, onSe
       <button type="button" className={`${toolClass} hover:!text-red-500`} title="حذف بلوک" aria-label="حذف بلوک" onClick={() => onRemove(block.id)}><Trash2 size={14} /></button>
     </div>
     <InlineBlock block={block} onChange={onChange} />
-    <Dialog open={settings} onOpenChange={setSettings}><DialogContent dir="rtl" className="max-h-[85vh] overflow-auto">
-      <DialogTitle>تنظیمات {BLOCK_LABELS[block.type]}</DialogTitle>
-      <DialogDescription>جزئیات این بخش از مطلب را تنظیم کنید.</DialogDescription>
+    <Dialog open={settings} onOpenChange={setSettings}><ModalContent title={`تنظیمات ${BLOCK_LABELS[block.type]}`} description="جزئیات این بخش از مطلب را تنظیم کنید."
+      footer={<button type="button" onClick={() => setSettings(false)} className="rounded-lg bg-stone-900 px-4 py-2 text-sm text-white">انجام شد</button>}>
       <BlockFields block={block} onChange={onChange} />
-      <button type="button" onClick={() => setSettings(false)} className="rounded-lg bg-stone-900 px-4 py-2 text-sm text-white">انجام شد</button>
-    </DialogContent></Dialog>
+    </ModalContent></Dialog>
   </section>;
 });
