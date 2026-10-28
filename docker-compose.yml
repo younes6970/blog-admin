@@ -1,0 +1,9 @@
+services:
+  daya-chain-admin:
+    image: ${IMAGE_FULL}
+    container_name: daya-chain-admin
+    hostname: daya-chain-admin
+    restart: unless-stopped
+    ports:
+      - "5201:80"
+

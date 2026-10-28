@@ -1,0 +1,8 @@
+node_modules/
+dist/
+build/
+.next/
+.git/
+.react-router/
+.vscode/
+docs/

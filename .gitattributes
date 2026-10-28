@@ -1,0 +1,4 @@
+Dockerfile merge=ours
+docker-compose.yml merge=ours
+prod-compose.yml merge=ours
+.gitlab-ci.yml merge=ours

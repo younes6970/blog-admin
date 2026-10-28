@@ -1,0 +1,65 @@
+image: docker:24
+variables:
+  DOCKER_TLS_CERTDIR: ""
+  SERVER_IP: 172.16.8.2
+  NEXUS_USER: "admin"
+  NEXUS_PASS: "Daya@123"
+  SERVER_USER: infra_admin
+  PROJECT_NAME: daya-chain-admin-test
+  IMAGE_NAME: "172.16.6.13:8082/$PROJECT_NAME"
+  BASE_REGISTRY: "172.16.6.13:8081/base-image"
+stages:
+  - build
+  - deploy
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - when: never
+default:
+  before_script:
+    - docker buildx use my_builder || true
+    - docker buildx inspect --bootstrap
+    - docker login 172.16.6.13:8081 -u ${NEXUS_USER} -p ${NEXUS_PASS}
+    - docker login 172.16.6.13:8082 -u ${NEXUS_USER} -p ${NEXUS_PASS}
+build_chain_admin_test:
+  stage: build
+  script:
+    - export IMAGE_TAG="$(date +%Y%m%d-%H%M)-$CI_COMMIT_SHORT_SHA"
+    - docker pull "${BASE_REGISTRY}/${PROJECT_NAME}:latest" || true
+    - echo "IMAGE_TAG=$IMAGE_TAG" > build.env
+    - |
+      docker buildx build \
+        --cache-from type=registry,ref=${BASE_REGISTRY}/${PROJECT_NAME}:buildcache \
+        --cache-to type=registry,ref=${BASE_REGISTRY}/${PROJECT_NAME}:buildcache,mode=max \
+        --tag "$IMAGE_NAME:$IMAGE_TAG" \
+        --tag "$BASE_REGISTRY/$PROJECT_NAME:latest" \
+        --build-arg APP_ENV=development \
+        --push \
+        .
+  artifacts:
+    reports:
+      dotenv: build.env
+deploy_chain_admin_test:
+  stage: deploy
+  image: ssh-client:3.23
+  before_script:
+    - eval "$(ssh-agent -s)"
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - ssh-keyscan -p 2604 "$SERVER_IP" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - echo "Starting deployment to $SERVER_IP ..."
+    - export APP_DIR="/home/$SERVER_USER/$PROJECT_NAME"
+    - export IMAGE_FULL="$IMAGE_NAME:$IMAGE_TAG"
+    - echo "Deploying $IMAGE_FULL to $SERVER_IP"
+    - ssh -p 2604 "$SERVER_USER@$SERVER_IP" "mkdir -p '$APP_DIR'"
+    - scp -P 2604 docker-compose.yml "$SERVER_USER@$SERVER_IP:$APP_DIR/docker-compose.yml"
+    - |
+      ssh -p 2604 "$SERVER_USER@$SERVER_IP" "
+        set -e
+        cd '$APP_DIR'
+        printf 'IMAGE_FULL=%s\n' '$IMAGE_FULL' > .env
+        docker compose pull
+        docker compose up -d"
