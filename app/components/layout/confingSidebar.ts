@@ -1,4 +1,4 @@
-import { LayoutDashboard, type LucideIcon } from "lucide-react";
+import { FileText, type LucideIcon } from "lucide-react";
 import type { Permission } from "~/lib/permissions";
 
 type SidebarLink = {
@@ -20,5 +20,5 @@ type SidebarGroup = {
 };
 export type SidebarItem = SidebarLink | SidebarGroup;
 export const SIDEBAR: SidebarItem[] = [
-  { key: "dashboard", label: "داشبورد", icon: LayoutDashboard, path: "/", permission: null },
+  { key: "posts", label: "پست‌های بلاگ", icon: FileText, path: "/posts", permission: null },
 ];

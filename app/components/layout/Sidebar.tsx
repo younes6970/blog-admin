@@ -34,7 +34,6 @@ type SidebarLinkItemProps = {
   isCollapsed: boolean;
   isActive: boolean;
   onNavigate: () => void;
-  pathname: string;
 };
 
 type SidebarGroupItemProps = {
@@ -53,7 +52,6 @@ function SidebarLinkItem({
   isCollapsed,
   isActive,
   onNavigate,
-  pathname,
 }: SidebarLinkItemProps) {
   const IconComponent = item.icon;
 
@@ -296,9 +294,8 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 );
               }
 
-              const isActive =
-                location.pathname ===
-                item.path;
+              const isActive = location.pathname === item.path ||
+                (item.path !== "/" && location.pathname.startsWith(`${item.path}/`));
 
               return (
                 <SidebarLinkItem
@@ -307,7 +304,6 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                   isCollapsed={isCollapsed}
                   isActive={isActive}
                   onNavigate={handleNavClick}
-                  pathname={location.pathname}
                 />
               );
             })}

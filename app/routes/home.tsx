@@ -1,6 +1,6 @@
-import DashboardPage from "~/modules/dashboard/DashboardPage";
+import { Navigate } from "react-router";
 
 export default function HomePage() {
-  return <DashboardPage />;
+  return <Navigate to="/posts" replace />;
 }
 

@@ -1,4 +1,4 @@
-import { Slot } from "@radix-ui/react-slot";
+import { Slot, Slottable } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { LoaderCircle } from "lucide-react";
 import * as React from "react";
@@ -91,7 +91,7 @@ function Button({
       disabled={disabled || loading}
       {...props}
     >
-      {props.children}
+      <Slottable>{props.children}</Slottable>
       {loading && (
         <LoaderCircle
           className={cn(
