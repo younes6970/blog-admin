@@ -1,10 +1,15 @@
 import { useState } from "react";
 import classNames from "classnames";
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 import { Sidebar } from "./Sidebar";
 
 function LayoutPanel() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { pathname } = useLocation();
+
+  if (pathname === "/posts/new" || /^\/posts\/[^/]+\/edit\/?$/.test(pathname)) {
+    return <main><Outlet /></main>;
+  }
 
   return (
       <div className="min-h-screen bg-gray-50">

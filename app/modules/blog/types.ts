@@ -21,6 +21,7 @@ export type BlogPost = {
   createdAt: string;
   updatedAt: string;
 };
+export type PostMetadataValue = Omit<BlogPost, "blocks">;
 
 export const BLOCK_LABELS: Record<BlockType, string> = {
   heading: "عنوان", paragraph: "پاراگراف", list: "لیست", image: "بنر تصویر", link: "لینک",

@@ -1,32 +1,38 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { useSortable } from "@dnd-kit/react/sortable";
-import { ArrowDown, ArrowUp, Copy, GripVertical, Trash2 } from "lucide-react";
-import { Button } from "~/components/ui/button";
+import { ArrowDown, ArrowUp, Copy, GripVertical, Settings2, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "~/components/ui/dialog";
 import { BLOCK_LABELS, type ContentBlock } from "../types";
 import BlockFields from "./BlockFields";
+import InlineBlock from "./InlineBlock";
 
 type Props = {
-  block: ContentBlock; index: number; count: number;
-  onChange: (block: ContentBlock) => void;
-  onRemove: (id: string) => void;
-  onDuplicate: (id: string) => void;
+  block: ContentBlock; index: number; count: number; selected: boolean;
+  onSelect: (id: string) => void; onChange: (block: ContentBlock) => void;
+  onRemove: (id: string) => void; onDuplicate: (id: string) => void;
   onMove: (id: string, direction: -1 | 1) => void;
 };
-export default memo(function SortableBlock({ block, index, count, onChange, onRemove, onDuplicate, onMove }: Props) {
-  const { ref, handleRef, isDragging } = useSortable({ id: block.id, index });
-  return <section ref={ref} className={`rounded-xl border bg-white transition-shadow ${isDragging ? "z-10 shadow-xl ring-2 ring-indigo-300" : "shadow-sm"}`}>
-    <header className="flex flex-wrap items-center justify-between gap-2 border-b bg-slate-50/80 px-3 py-2">
-      <div className="flex items-center gap-2">
-        <button type="button" ref={handleRef} aria-label={`جابه‌جایی بلوک ${index + 1}`} title="برای جابه‌جایی بکشید یا از کلیدهای جهت استفاده کنید" className="touch-none cursor-grab rounded p-1 text-slate-400 focus-visible:ring-2"><GripVertical size={20} /></button>
-        <span className="text-sm font-medium">{BLOCK_LABELS[block.type]}</span><span className="text-xs text-slate-400">{(index + 1).toLocaleString("fa-IR")}</span>
-      </div>
-      <div className="flex gap-1">
-        <Button type="button" variant="ghost" color="transparent" size="sm" aria-label="انتقال به بالا" title="انتقال به بالا" disabled={index === 0} onClick={() => onMove(block.id, -1)}><ArrowUp size={15} /></Button>
-        <Button type="button" variant="ghost" color="transparent" size="sm" aria-label="انتقال به پایین" title="انتقال به پایین" disabled={index === count - 1} onClick={() => onMove(block.id, 1)}><ArrowDown size={15} /></Button>
-        <Button type="button" variant="ghost" color="transparent" size="sm" aria-label="تکثیر بلوک" title="تکثیر بلوک" onClick={() => onDuplicate(block.id)}><Copy size={15} /></Button>
-        <Button type="button" variant="ghost" color="transparent" size="sm" className="text-red-500" aria-label="حذف بلوک" title="حذف بلوک" onClick={() => onRemove(block.id)}><Trash2 size={15} /></Button>
-      </div>
-    </header>
-    <div className="p-4"><BlockFields block={block} onChange={onChange} /></div>
+const toolClass = "inline-flex size-7 items-center justify-center rounded text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-900 disabled:opacity-25";
+export default memo(function SortableBlock({ block, index, count, selected, onSelect, onChange, onRemove, onDuplicate, onMove }: Props) {
+  const [settings, setSettings] = useState(false);
+  const { ref, handleRef, isDragging } = useSortable({ id: block.id, index, type: "content-block", accept: "content-block" });
+  return <section ref={ref} data-block-id={block.id} onFocusCapture={() => onSelect(block.id)} onClick={() => onSelect(block.id)}
+    className={`group/block relative -mx-3 rounded-lg px-3 py-3 ring-1 transition-[box-shadow] ${isDragging ? "z-20 bg-white shadow-lg ring-stone-300" : selected ? "ring-stone-200" : "ring-transparent hover:ring-stone-200"}`}>
+    <div className={`absolute -top-8 left-0 z-10 flex items-center gap-0.5 rounded-lg border border-stone-200 bg-white p-1 shadow-sm transition-opacity group-hover/block:opacity-100 group-focus-within/block:opacity-100 ${selected ? "opacity-100" : "opacity-0 pointer-events-none group-hover/block:pointer-events-auto group-focus-within/block:pointer-events-auto"}`}>
+      <button type="button" ref={handleRef} className={`${toolClass} touch-none cursor-grab`} aria-label="کشیدن و جابه‌جایی بلوک" title="جابه‌جایی"><GripVertical size={15} /></button>
+      <span className="border-l px-2 text-[10px] text-stone-400">{BLOCK_LABELS[block.type]}</span>
+      <button type="button" className={toolClass} title="تنظیمات بلوک" aria-label="تنظیمات بلوک" onClick={() => setSettings(true)}><Settings2 size={14} /></button>
+      <button type="button" className={toolClass} title="انتقال به بالا" aria-label="انتقال به بالا" disabled={!index} onClick={() => onMove(block.id, -1)}><ArrowUp size={14} /></button>
+      <button type="button" className={toolClass} title="انتقال به پایین" aria-label="انتقال به پایین" disabled={index === count - 1} onClick={() => onMove(block.id, 1)}><ArrowDown size={14} /></button>
+      <button type="button" className={toolClass} title="تکثیر بلوک" aria-label="تکثیر بلوک" onClick={() => onDuplicate(block.id)}><Copy size={14} /></button>
+      <button type="button" className={`${toolClass} hover:!text-red-500`} title="حذف بلوک" aria-label="حذف بلوک" onClick={() => onRemove(block.id)}><Trash2 size={14} /></button>
+    </div>
+    <InlineBlock block={block} onChange={onChange} />
+    <Dialog open={settings} onOpenChange={setSettings}><DialogContent dir="rtl" className="max-h-[85vh] overflow-auto">
+      <DialogTitle>تنظیمات {BLOCK_LABELS[block.type]}</DialogTitle>
+      <DialogDescription>جزئیات این بخش از مطلب را تنظیم کنید.</DialogDescription>
+      <BlockFields block={block} onChange={onChange} />
+      <button type="button" onClick={() => setSettings(false)} className="rounded-lg bg-stone-900 px-4 py-2 text-sm text-white">انجام شد</button>
+    </DialogContent></Dialog>
   </section>;
 });

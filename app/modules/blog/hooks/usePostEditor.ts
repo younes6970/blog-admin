@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { createPost, type BlogPost, type ContentBlock } from "../types";
 import { postRepository } from "../services/postRepository";
 import { validatePost } from "../schema";
-import type { PostMetadataValue } from "../components/PostMetadata";
+import type { PostMetadataValue } from "../types";
 
 export function usePostEditor(id?: string) {
   const navigate = useNavigate();

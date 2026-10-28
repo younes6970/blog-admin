@@ -1,23 +1,28 @@
-import { useCallback } from "react";
-import { DragDropProvider } from "@dnd-kit/react";
+import { Fragment, useCallback, useState, type Dispatch, type SetStateAction } from "react";
+import { DragDropProvider, DragOverlay } from "@dnd-kit/react";
 import { move } from "@dnd-kit/helpers";
-import { Heading, AlignRight, List, ImagePlus, Link2, Plus } from "lucide-react";
 import { BLOCK_LABELS, createBlock, type BlockType, type ContentBlock } from "../types";
+import type { PostMetadataValue } from "../types";
 import SortableBlock from "./SortableBlock";
+import ArticleHeader from "./ArticleHeader";
+import BlockPalette from "./BlockPalette";
+import InsertionPoint from "./InsertionPoint";
 
-const TOOLS = [
-  { type: "heading", icon: Heading }, { type: "paragraph", icon: AlignRight },
-  { type: "list", icon: List }, { type: "image", icon: ImagePlus }, { type: "link", icon: Link2 },
-] as const;
-type Props = { blocks: ContentBlock[]; onChange: React.Dispatch<React.SetStateAction<ContentBlock[]>> };
-export default function ContentBuilder({ blocks, onChange }: Props) {
+type Props = {
+  metadata: PostMetadataValue;
+  onMetadataChange: (patch: Partial<PostMetadataValue>) => void;
+  blocks: ContentBlock[];
+  onChange: Dispatch<SetStateAction<ContentBlock[]>>;
+};
+export default function ContentBuilder({ metadata, onMetadataChange, blocks, onChange }: Props) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const [paletteDragging, setPaletteDragging] = useState(false);
   const update = useCallback((block: ContentBlock) => onChange((current) => current.map((item) => item.id === block.id ? block : item)), [onChange]);
-  const remove = useCallback((id: string) => onChange((current) => current.filter((item) => item.id !== id)), [onChange]);
+  const remove = useCallback((id: string) => { onChange((current) => current.filter((item) => item.id !== id)); setSelected(null); }, [onChange]);
   const duplicate = useCallback((id: string) => onChange((current) => {
     const index = current.findIndex((item) => item.id === id);
     if (index < 0) return current;
-    const copy = { ...structuredClone(current[index]), id: crypto.randomUUID() };
-    return [...current.slice(0, index + 1), copy, ...current.slice(index + 1)];
+    return [...current.slice(0, index + 1), { ...structuredClone(current[index]), id: crypto.randomUUID() }, ...current.slice(index + 1)];
   }), [onChange]);
   const shift = useCallback((id: string, direction: -1 | 1) => onChange((current) => {
     const index = current.findIndex((item) => item.id === id);
@@ -25,13 +30,43 @@ export default function ContentBuilder({ blocks, onChange }: Props) {
     if (index < 0 || target < 0 || target >= current.length) return current;
     const next = [...current]; [next[index], next[target]] = [next[target], next[index]]; return next;
   }), [onChange]);
-  const add = (type: BlockType) => onChange((current) => [...current, createBlock(type)]);
-  return <section className="space-y-4">
-    <div className="flex items-center justify-between"><div><h2 className="font-bold text-slate-900">محتوای پست</h2><p className="mt-1 text-xs leading-6 text-slate-500">بلوک‌ها را اضافه کنید و با کشیدن دستگیره مرتب کنید.</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-500">{blocks.length.toLocaleString("fa-IR")} بلوک</span></div>
-    <div className="flex flex-wrap gap-2 rounded-xl border bg-white p-3">{TOOLS.map(({ type, icon: Icon }) => <button key={type} type="button" onClick={() => add(type)} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-xs text-slate-600 transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"><Icon size={16} />{BLOCK_LABELS[type]}<Plus size={12} /></button>)}</div>
-    <DragDropProvider onDragEnd={(event) => { if (!event.canceled) onChange((current) => move(current, event)); }}>
-      <div className="space-y-4">{blocks.map((block, index) => <SortableBlock key={block.id} block={block} index={index} count={blocks.length} onChange={update} onRemove={remove} onDuplicate={duplicate} onMove={shift} />)}</div>
-    </DragDropProvider>
-    {!blocks.length && <div className="rounded-xl border-2 border-dashed bg-white p-10 text-center"><div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500"><Plus /></div><h3 className="text-sm font-medium">اولین بلوک را اضافه کنید</h3><p className="mt-2 text-xs leading-6 text-slate-500">یک عنوان، متن، لیست، تصویر یا لینک؛ داستان پست را خودتان بچینید.</p></div>}
-  </section>;
+  const add = (type: BlockType, index = blocks.length) => {
+    const block = createBlock(type);
+    onChange((current) => [...current.slice(0, index), block, ...current.slice(index)]);
+    setSelected(block.id);
+    requestAnimationFrame(() => {
+      const element = document.querySelector<HTMLElement>(`[data-block-id="${block.id}"]`);
+      element?.scrollIntoView({ behavior: "smooth", block: "center" });
+      element?.querySelector<HTMLTextAreaElement>("textarea")?.focus({ preventScroll: true });
+    });
+  };
+  return <DragDropProvider onDragStart={(event) => setPaletteDragging(event.operation.source?.type === "palette")}
+    onDragEnd={(event) => {
+      setPaletteDragging(false);
+      if (event.canceled) return;
+      const { source, target } = event.operation;
+      if (source?.type === "palette") {
+        const type = source.data.blockType as BlockType;
+        const index = target?.data.insertionIndex;
+        if (typeof index === "number" && type in BLOCK_LABELS) add(type, index);
+      } else if (target) onChange((current) => move(current, event));
+    }}>
+    <div className="mx-auto grid max-w-[1130px] items-start gap-6 px-5 pb-32 pt-7 md:grid-cols-[minmax(0,1fr)_176px] md:gap-14 md:px-10 md:pt-14 lg:gap-20">
+      <div className="order-2 min-w-0 md:order-none">
+        <article aria-label="مطلب قابل ویرایش" className="mx-auto max-w-[740px] pt-4" onKeyDown={(event) => { if (event.key === "Escape") setSelected(null); }}>
+          <div onFocusCapture={() => setSelected(null)}><ArticleHeader value={metadata} onChange={onMetadataChange} /></div>
+          <div className="mt-6">
+            {blocks.map((block, index) => <Fragment key={block.id}>
+              <InsertionPoint index={index} active={paletteDragging} onInsert={() => add("paragraph", index)} />
+              <SortableBlock block={block} index={index} count={blocks.length} selected={selected === block.id} onSelect={setSelected} onChange={update} onRemove={remove} onDuplicate={duplicate} onMove={shift} />
+            </Fragment>)}
+            <InsertionPoint index={blocks.length} active={paletteDragging} empty={!blocks.length} onInsert={() => add("paragraph")} />
+          </div>
+        </article>
+        <footer className="mx-auto mt-14 max-w-[740px] border-t border-stone-200/60 pt-5 text-[10px] text-stone-400">{blocks.length.toLocaleString("fa-IR")} بلوک · ذخیره در این مرورگر</footer>
+      </div>
+      <BlockPalette onAdd={add} />
+    </div>
+    <DragOverlay disabled={(source) => source?.type !== "palette"} dropAnimation={null}>{(source) => <div className="rounded-lg border border-stone-200 bg-white px-5 py-3 text-xs text-stone-700 shadow-lg">{BLOCK_LABELS[source.data.blockType as BlockType] ?? "بلوک"}</div>}</DragOverlay>
+  </DragDropProvider>;
 }

@@ -29,12 +29,12 @@ function ImagePlaceholder() {
 }
 export default memo(function PostPreview({ post }: { post: BlogPost }) {
   const cover = safeImage(post.cover.src);
-  return <article dir="rtl" className="mx-auto max-w-3xl break-words bg-white p-5 sm:p-8">
-    <div className="mb-5 flex flex-wrap gap-2">{post.tags.map((tag) => <span key={tag} className="rounded-full bg-indigo-50 px-3 py-1 text-xs text-indigo-700">{tag}</span>)}</div>
-    <h1 className="text-3xl font-bold leading-relaxed tracking-tight text-slate-900">{post.title || "عنوان پست شما اینجا قرار می‌گیرد"}</h1>
+  return <article dir="rtl" className="mx-auto max-w-[740px] break-words px-2 py-4 sm:px-0">
+    <div className="mb-7 flex flex-wrap gap-2">{post.tags.map((tag) => <span key={tag} className="rounded-full bg-stone-100 px-3 py-1 text-[11px] text-stone-600">{tag}</span>)}</div>
+    <h1 className="text-[30px] font-bold leading-[1.65] tracking-tight text-stone-900 sm:text-[40px]">{post.title || "عنوان داستان شما…"}</h1>
     <div className="mb-7 mt-4 flex flex-wrap gap-3 text-xs text-slate-500"><span>{formatPostDate(post.publishedAt)}</span><span>•</span><span>{post.author || "نام نویسنده"}</span></div>
-    {cover ? <img src={cover} alt={post.cover.alt} className="mb-7 max-h-[420px] w-full rounded-2xl object-cover" decoding="async" /> : <ImagePlaceholder />}
-    {post.excerpt && <p className="my-7 border-r-2 border-indigo-200 pr-4 text-base leading-8 text-slate-500">{post.excerpt}</p>}
+    {cover ? <img src={cover} alt={post.cover.alt} className="mb-7 max-h-[520px] w-full rounded-lg object-cover" decoding="async" /> : <ImagePlaceholder />}
+    {post.excerpt && <p className="my-7 text-[16px] leading-8 text-stone-500">{post.excerpt}</p>}
     <div className="mt-8 space-y-7">{post.blocks.map((block) => <BlockPreview key={block.id} block={block} />)}</div>
     {!post.blocks.length && <p className="py-12 text-center text-sm text-slate-400">محتوای پست پس از افزودن بلوک‌ها اینجا نمایش داده می‌شود.</p>}
   </article>;
