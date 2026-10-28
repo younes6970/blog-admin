@@ -37,6 +37,7 @@ registerHooks({
 const { createPost, createBlock } = await import("./types.ts");
 const { default: InlineBlock } = await import("./components/InlineBlock.tsx");
 const { default: ContentBuilder } = await import("./components/ContentBuilder.tsx");
+const { default: PostPreview } = await import("./components/PostPreview.tsx");
 const noop = () => {};
 
 test("inline editing renders every block type without Slot errors", () => {
@@ -68,4 +69,40 @@ test("article renders saved blocks in their stored order", () => {
   assert.ok(html.indexOf("FIRST_SECTION") < html.indexOf("SECOND_SECTION"));
   assert.equal((html.match(/data-block-id=/g) ?? []).length, 2);
   assert.match(html, /تنظیمات بلوک/);
+});
+
+test("insertion target identities survive repeated additions, reorders and removals", () => {
+  const post = createPost();
+  const renderTargets = (blocks) => {
+    const html = renderToStaticMarkup(createElement(ContentBuilder, { metadata: post, blocks, onChange: noop, onMetadataChange: noop }));
+    return [...html.matchAll(/data-insertion-id="([^"]+)" data-insertion-index="(\d+)"/g)].map((match) => ({ id: match[1], index: Number(match[2]) }));
+  };
+  assert.deepEqual(renderTargets([]), [{ id: "insert-end", index: 0 }]);
+  const blocks = [];
+  for (const type of ["paragraph", "heading", "list", "image", "link"]) {
+    blocks.push(createBlock(type));
+    const targets = renderTargets(blocks);
+    assert.equal(targets.length, blocks.length + 1);
+    assert.equal(new Set(targets.map((target) => target.id)).size, targets.length);
+    blocks.forEach((block, index) => assert.deepEqual(targets[index], { id: `insert-before-${block.id}`, index }));
+    assert.deepEqual(targets.at(-1), { id: "insert-end", index: blocks.length });
+  }
+  blocks.reverse();
+  assert.deepEqual(renderTargets(blocks)[0], { id: `insert-before-${blocks[0].id}`, index: 0 });
+  blocks.splice(1, 2);
+  assert.deepEqual(renderTargets(blocks).at(-1), { id: "insert-end", index: blocks.length });
+});
+
+test("preview renders geometric list markers and a linked slim banner", () => {
+  const post = createPost();
+  post.blocks = [
+    { ...createBlock("list"), marker: "diamond", items: ["Item"] },
+    { ...createBlock("image"), size: "slim", image: { src: "https://example.com/banner.jpg", alt: "Banner" }, href: "https://example.com/destination" },
+  ];
+  const html = renderToStaticMarkup(createElement(PostPreview, { post }));
+  assert.match(html, /list-style-type:/);
+  assert.match(html, /◆/);
+  assert.match(html, /aspect-\[5\/1\]/);
+  assert.match(html, /href="https:\/\/example.com\/destination"/);
+  assert.match(html, /rel="noopener noreferrer"/);
 });

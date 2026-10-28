@@ -48,7 +48,9 @@ export default function ContentBuilder({ metadata, onMetadataChange, blocks, onC
       if (source?.type === "palette") {
         const type = source.data.blockType as BlockType;
         const index = target?.data.insertionIndex;
-        if (typeof index === "number" && type in BLOCK_LABELS) add(type, index);
+        // Allow the drag manager to finish restoring the palette source before
+        // inserting DOM nodes or moving focus/scroll to the new block.
+        if (typeof index === "number" && type in BLOCK_LABELS) requestAnimationFrame(() => add(type, index));
       } else if (target) onChange((current) => move(current, event));
     }}>
     <div className="mx-auto grid max-w-[1130px] items-start gap-6 px-5 pb-32 pt-7 md:grid-cols-[minmax(0,1fr)_176px] md:gap-14 md:px-10 md:pt-14 lg:gap-20">
@@ -57,10 +59,10 @@ export default function ContentBuilder({ metadata, onMetadataChange, blocks, onC
           <div onFocusCapture={() => setSelected(null)}><ArticleHeader value={metadata} onChange={onMetadataChange} /></div>
           <div className="mt-6">
             {blocks.map((block, index) => <Fragment key={block.id}>
-              <InsertionPoint index={index} active={paletteDragging} onInsert={() => add("paragraph", index)} />
+              <InsertionPoint id={`insert-before-${block.id}`} index={index} active={paletteDragging} onInsert={() => add("paragraph", index)} />
               <SortableBlock block={block} index={index} count={blocks.length} selected={selected === block.id} onSelect={setSelected} onChange={update} onRemove={remove} onDuplicate={duplicate} onMove={shift} />
             </Fragment>)}
-            <InsertionPoint index={blocks.length} active={paletteDragging} empty={!blocks.length} onInsert={() => add("paragraph")} />
+            <InsertionPoint key="insertion-end" id="insert-end" index={blocks.length} active={paletteDragging} empty={!blocks.length} onInsert={() => add("paragraph")} />
           </div>
         </article>
         <footer className="mx-auto mt-14 max-w-[740px] border-t border-stone-200/60 pt-5 text-[10px] text-stone-400">{blocks.length.toLocaleString("fa-IR")} بلوک · ذخیره در این مرورگر</footer>

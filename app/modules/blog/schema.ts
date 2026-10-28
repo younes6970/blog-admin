@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { BANNER_SIZES, LIST_MARKERS } from "./types";
 
 export function safeHref(value: string): string | undefined {
   try {
@@ -19,8 +20,8 @@ export const postSchema = z.object({
   blocks: z.array(z.discriminatedUnion("type", [
     z.object({ ...base, type: z.literal("heading"), text: z.string(), level: z.union([z.literal(2), z.literal(3)]) }),
     z.object({ ...base, type: z.literal("paragraph"), text: z.string() }),
-    z.object({ ...base, type: z.literal("list"), items: z.array(z.string()), ordered: z.boolean() }),
-    z.object({ ...base, type: z.literal("image"), image, caption: z.string(), href: z.string() }),
+    z.object({ ...base, type: z.literal("list"), items: z.array(z.string()), ordered: z.boolean(), marker: z.enum(LIST_MARKERS).optional() }),
+    z.object({ ...base, type: z.literal("image"), image, caption: z.string(), href: z.string(), size: z.enum(BANNER_SIZES).optional() }),
     z.object({ ...base, type: z.literal("link"), text: z.string(), href: z.string() }),
   ])),
 }).refine((post) => new Set(post.blocks.map((block) => block.id)).size === post.blocks.length,

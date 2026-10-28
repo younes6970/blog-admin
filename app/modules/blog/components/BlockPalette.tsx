@@ -16,7 +16,7 @@ function PaletteItem({ tool, onAdd }: { tool: typeof TOOLS[number]; onAdd: (type
   </button>;
 }
 export default function BlockPalette({ onAdd }: { onAdd: (type: BlockType) => void }) {
-  return <aside aria-label="ابزار افزودن بلوک" className="order-1 sticky top-[73px] z-30 self-start rounded-xl border border-stone-200/70 bg-[#fafaf9]/95 p-1 backdrop-blur-sm md:order-none md:top-28 md:w-44 md:border-0 md:p-0">
+  return <aside aria-label="ابزار افزودن بلوک" className="order-1 sticky top-[73px] z-30 self-start rounded-xl border border-stone-200/70 bg-white p-1 backdrop-blur-sm md:order-none md:top-28 md:w-44 md:border-0 md:p-0">
     <div className="mb-5 hidden items-center gap-2 px-3 text-[11px] text-stone-400 md:flex"><Plus size={13} />افزودن به مطلب</div>
     <div className="flex justify-center gap-1 md:flex-col">{TOOLS.map((tool) => <PaletteItem key={tool.type} tool={tool} onAdd={onAdd} />)}</div>
     <p className="mt-6 hidden px-3 text-[10px] leading-6 text-stone-400 md:block">یک بلوک را بکشید و بین بخش‌های مطلب رها کنید.<br />یا برای افزودن، روی آن کلیک کنید.</p>

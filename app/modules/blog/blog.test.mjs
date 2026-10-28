@@ -17,6 +17,8 @@ const { createPost, createBlock } = await import("./types.ts");
 const { postSchema, validatePost, safeHref, safeImage } = await import("./schema.ts");
 const { serializePost } = await import("./utils.ts");
 const { postRepository } = await import("./services/postRepository.ts");
+const { removeEmptyListItem } = await import("./list-editing.ts");
+const { getListMarker } = await import("./block-presentation.ts");
 
 test("all block types retain order and content in the versioned JSON contract", () => {
   const post = createPost();
@@ -75,4 +77,28 @@ test("corrupt storage is preserved instead of silently overwritten", () => {
 test("storage quota failures propagate so the editor can show a recoverable error", () => {
   globalThis.localStorage = { getItem: () => null, setItem: () => { throw new Error("Quota exceeded"); } };
   assert.throws(() => postRepository.save(createPost()), /Quota exceeded/);
+});
+
+test("empty list items delete with either deletion key and focus the previous item", () => {
+  for (const key of ["Backspace", "Delete"]) {
+    assert.deepEqual(removeEmptyListItem(["First", "", "Third"], 1, key, false), { items: ["First", "Third"], focusIndex: 0 });
+    assert.deepEqual(removeEmptyListItem([""], 0, key, false), { items: [], focusIndex: 0 });
+    assert.equal(removeEmptyListItem(["Text"], 0, key, false), null);
+    assert.equal(removeEmptyListItem([""], 0, key, true), null);
+  }
+  assert.equal(removeEmptyListItem([""], 0, "ArrowLeft", false), null);
+});
+test("old posts remain compatible and new marker and banner options survive JSON", () => {
+  const post = createPost();
+  const list = createBlock("list");
+  assert.equal(getListMarker(list), "disc");
+  assert.equal(getListMarker({ ...list, ordered: true }), "decimal");
+  const banner = createBlock("image");
+  assert.ok(postSchema.safeParse({ ...post, blocks: [list, banner] }).success);
+  for (const marker of ["decimal", "none", "disc", "circle", "square", "diamond"]) {
+    for (const size of ["original", "wide", "slim"]) {
+      const updated = { ...post, blocks: [{ ...list, marker, ordered: marker === "decimal" }, { ...banner, size, href: "https://example.com/banner" }] };
+      assert.deepEqual(postSchema.parse(JSON.parse(serializePost(updated))), updated);
+    }
+  }
 });

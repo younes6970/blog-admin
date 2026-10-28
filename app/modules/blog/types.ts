@@ -1,10 +1,14 @@
 export type ImageValue = { src: string; alt: string };
+export const LIST_MARKERS = ["decimal", "none", "disc", "circle", "square", "diamond"] as const;
+export type ListMarker = typeof LIST_MARKERS[number];
+export const BANNER_SIZES = ["original", "wide", "slim"] as const;
+export type BannerSize = typeof BANNER_SIZES[number];
 type BlockBase = { id: string };
 export type ContentBlock =
   | (BlockBase & { type: "heading"; text: string; level: 2 | 3 })
   | (BlockBase & { type: "paragraph"; text: string })
-  | (BlockBase & { type: "list"; items: string[]; ordered: boolean })
-  | (BlockBase & { type: "image"; image: ImageValue; caption: string; href: string })
+  | (BlockBase & { type: "list"; items: string[]; ordered: boolean; marker?: ListMarker })
+  | (BlockBase & { type: "image"; image: ImageValue; caption: string; href: string; size?: BannerSize })
   | (BlockBase & { type: "link"; text: string; href: string });
 export type BlockType = ContentBlock["type"];
 export type BlogPost = {

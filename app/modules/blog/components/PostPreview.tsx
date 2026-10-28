@@ -3,6 +3,7 @@ import { ImageIcon } from "lucide-react";
 import type { BlogPost, ContentBlock } from "../types";
 import { safeHref, safeImage } from "../schema";
 import { formatPostDate } from "../utils";
+import { getListMarker, listMarkerStyle, bannerImageClass, bannerPlaceholderClass } from "../block-presentation";
 
 const BlockPreview = memo(function BlockPreview({ block }: { block: ContentBlock }) {
   switch (block.type) {
@@ -12,13 +13,14 @@ const BlockPreview = memo(function BlockPreview({ block }: { block: ContentBlock
     }
     case "paragraph": return <p className="whitespace-pre-wrap text-slate-600 leading-9">{block.text || "متن پاراگراف در این قسمت نمایش داده می‌شود…"}</p>;
     case "list": {
-      const Tag = block.ordered ? "ol" : "ul";
-      return <Tag className={`space-y-2 pr-6 leading-8 text-slate-600 ${block.ordered ? "list-decimal" : "list-disc"}`}>{block.items.map((item, index) => <li key={index}>{item || "آیتم لیست"}</li>)}</Tag>;
+      const marker = getListMarker(block);
+      const Tag = marker === "decimal" ? "ol" : "ul";
+      return <Tag style={{ listStyleType: listMarkerStyle(marker) }} className={`space-y-2 leading-8 text-slate-600 ${marker === "none" ? "pr-0" : "pr-6"}`}>{block.items.map((item, index) => <li key={index}>{item || "آیتم لیست"}</li>)}</Tag>;
     }
     case "link": return <a className="inline-flex rounded-lg bg-main px-5 py-3 text-sm text-white" href={safeHref(block.href)} target="_blank" rel="noopener noreferrer">{block.text || "متن لینک"}</a>;
     case "image": {
       const src = safeImage(block.image.src);
-      const image = src ? <img src={src} alt={block.image.alt} className="w-full rounded-xl object-cover" loading="lazy" decoding="async" /> : <ImagePlaceholder />;
+      const image = src ? <img src={src} alt={block.image.alt} className={`rounded-lg ${bannerImageClass(block.size)}`} loading="lazy" decoding="async" /> : <div className={`rounded-lg bg-stone-100 ${bannerPlaceholderClass(block.size)}`} />;
       return <figure>{safeHref(block.href) ? <a href={safeHref(block.href)} target="_blank" rel="noopener noreferrer">{image}</a> : image}
         {block.caption && <figcaption className="mt-3 text-center text-xs text-slate-500">{block.caption}</figcaption>}</figure>;
     }
